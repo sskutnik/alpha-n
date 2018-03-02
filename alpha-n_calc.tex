@@ -160,15 +160,17 @@ Again, note here that this contribution is calculated \textbf{per target nuclide
 This involves obtaining the $\alpha$ decay information for the source nuclide, including decay energy(ies) and branching fractions. If no $\alpha$ decays are found, skip to the next nuclide.
 
 \subsubsection{Set up $\alpha$ energy grid for target/source combination}
-Here, a linearly-spaced grid is established for interpolating reaction cross-sections for each emitted $\alpha$ energy from source nuclide $k$; the number of energy groups to use is a user-specified parameter. Meanwhile, the bounds of this are set such that $E_\alpha^{\min}$ is the minimum energy found for $\sigan\left(E\right)$\ (the \alphn\ production cross-section) and $E_\alpha^{\max}$ is set by the maximum $\sigan\left(E\right)$\ entry (currently bounded at 6.5 MeV).
+Here, a linearly-spaced grid is established for interpolating reaction cross-sections for each emitted $\alpha$ energy from source nuclide $k$; the number of energy groups to use is a user-specified parameter. Meanwhile, the bounds of this are set such that $E_\alpha^{\min}$ is the minimum energy found for $\sigan\left(E\right)$\ (the \alphn\ production cross-section); i.e., it is the maximum of $\max \left(0.001,E^{cx}_{\min} \right)$ MeV and $E_\alpha^{\max}$ is set by the maximum $\sigan\left(E\right)$\ entry (currently bounded at 6.5 MeV). Note that this is an arbitrary constraint, as certain target nuclei have cross-section data available above 6.5 MeV.
 
 This means we have:
 
 \begin{equation}
-\Delta E_\alpha^g = \frac{E_\alpha^{\max} - E_\alpha^{\min} }{N^\alpha_{groups}}
+\Delta E_\alpha^g,i = \frac{E_\alpha^{\max} - E_\alpha^{\min} }{N^\alpha_{groups}}
 \end{equation}
 
 making up a linearly-spaced energy grid $E_e\left(m\right)$. Note that these same energy groups are likewise used to calculate $\sigma_{s}\left(E\right)$, the $\alpha$ stopping cross-section. 
+
+Note that this alpha energy grid will be unique to each target nucleus (i.e., it is recalculated for each target).
 
 \subsubsection{Interpolate $\sigan\left(E\right)$ for each $\alpha$ energy group}
 
@@ -189,7 +191,7 @@ The intercept is calculated as:
 The interpolated \alphn\ cross-section for energy group $E_e\left(m\right)$ is then:
 
 \begin{equation}
-\sigan\left(m\right) = ee\left(m\right) \cdot \mathrm{slope} + \mathrm{intercept}
+\sigan\left(m\right) = E_e\left(m\right) \cdot \mathrm{slope} + \mathrm{intercept}
 \end{equation}
 
 \subsubsection{Determine (and store) stopping cross-section for each $\alpha$ energy group}
@@ -211,7 +213,7 @@ where
 
 The nuclear stopping term (calculated for each target matrix element) is calculated from a mass/charge ratio for the target, along with the $\alpha$ energy:
 \begin{equation}
-\displaystyle R = \frac{32530 \cdot A_{target} \cdot ee\left(m\right)}{Z_\alpha \cdot Z_{target} \cdot \left(A_\alpha + A_{target} \right) \cdot \sqrt{ Z_\alpha^{\sfrac{2}{3}} + Z_{target}^{\sfrac{2}{3}} } } 
+\displaystyle R = \frac{32530 \cdot A_{target} \cdot E_e\left(m\right)}{Z_\alpha \cdot Z_{target} \cdot \left(A_\alpha + A_{target} \right) \cdot \sqrt{ Z_\alpha^{\sfrac{2}{3}} + Z_{target}^{\sfrac{2}{3}} } } 
 \end{equation}
 
 The stopping cross-section $\sigma_{s,nuc}^i \left(E\right)$ nuclear component for target $i$ is then:
@@ -220,7 +222,7 @@ The stopping cross-section $\sigma_{s,nuc}^i \left(E\right)$ nuclear component f
 \displaystyle \sigma_{s,nuc}^i\left(E\right) = 
 \begin{cases}
 \displaystyle 1.593 \sqrt{R} & R < 0.001 \\[12pt]
-\displaystyle \frac{1.7 \sqrt{R} \cdot \ln \left(R + 2.17828\right)}{1 + 6.8 \cdot R + 3.4 \cdot R^{\sfrac{3}{2}}} & 0.001 \leq R < 10.0 \\[12pt]
+\displaystyle \frac{1.7 \sqrt{R} \cdot \ln \left(R + 2.71828\right)}{1 + 6.8 \cdot R + 3.4 \cdot R^{\sfrac{3}{2}}} & 0.001 \leq R < 10.0 \\[12pt]
 \displaystyle \frac{\ln\left(0.47\cdot R\right)}{2\cdot R} & \mathrm{otherwise}
 \end{cases}
 \end{equation}
@@ -232,8 +234,8 @@ The electronic stopping power term is calculated using stopping power function c
 
 For the low-energy case ($E_e\left(m\right) < 30$ meV), we have the following:
 \begin{eqnarray}
-S_{lo} & = & c_1^{stop} \cdot \left(1000 \cdot ee\left(m\right) \right) \\
-S_{hi} & = & \frac{c_3^{stop}}{ee\left(m\right)} \cdot \ln \left( 1 + \frac{c_4^{stop}}{ee\left(m\right)} + \frac{c_5^{stop}}{ee\left(m\right)} \right) 
+S_{lo} & = & c_1^{stop} \cdot \left(1000 \cdot E_e\left(m\right) \right)^{c_2^{stop}} \\
+S_{hi} & = & \frac{c_3^{stop}}{E_e\left(m\right)} \cdot \ln \left( 1 + \frac{c_4^{stop}}{E_e\left(m\right)} + c_5^{stop}\cdot E_e\left(m\right) \right) 
 \end{eqnarray}
 
 Thus the electronic stopping component is:
@@ -241,8 +243,8 @@ Thus the electronic stopping component is:
 \begin{equation}
 \sigma_{s,ele}^i \left(E\right) =
 \begin{cases}
-\displaystyle \frac{S_{lo} \cdot S_{hi} }{\left(S_{lo} + S_{hi} \right)} & ee\left(m\right) \leq 30\ \mathrm{meV} \\[12pt]
-\displaystyle {c_6^{stop}} + \ln\left(\frac{1}{ee\left(m\right)} \right) \left[ c_7^{stop} + \ln\left(\frac{1}{ee\left(m\right)} \right) c_8^{stop} + \left[\ln\left(\frac{1}{ee\left(m\right)}\right)\right]^2 c_9^{stop} \right] & \mathrm{otherwise}
+\displaystyle \frac{S_{lo} \cdot S_{hi} }{\left(S_{lo} + S_{hi} \right)} & E_e\left(m\right) \leq 30\ \mathrm{meV} \\[12pt]
+\displaystyle \exp\left\{ {c_6^{stop}} + \ln\left(\frac{1}{E_e\left(m\right)} \right) \left[ c_7^{stop} + \ln\left(\frac{1}{E_e\left(m\right)} \right) c_8^{stop} + \left[\ln\left(\frac{1}{E_e\left(m\right)}\right)\right]^2 c_9^{stop} \right] \right\} & \mathrm{otherwise}
 \end{cases}
 \end{equation}
 
@@ -264,7 +266,7 @@ p\left(E\right) = \int_0^E r\left(E'\right) dE' = \sum_{n=0}^{m} r\left(n\right)
 In groupwise form, this becomes:
 
 \begin{equation}
-p\left(m\right) = p\left(m-1\right) + 10^{-6} \cdot \frac{N_i}{N} \cdot \left( \frac{r\left(m \right) + r\left(m - 1 \right) }{\Delta E_\alpha^g } \right)
+p\left(m\right) = p\left(m-1\right) + 10^{-6} \cdot \frac{N_i}{N} \cdot \left[ r\left(m \right) + r\left(m - 1 \right)  \right]\cdot \frac{\Delta E_\alpha^g}{2} 
 \label{eq:an_prob_groupwise}
 \end{equation}
 
@@ -275,7 +277,7 @@ for $m=\left(1,N_\alpha + 1\right)$.
 For each alpha emitter, one then needs to interpolate the neutron production probability (Equation~\eqref{eq:an_prob_groupwise}) for the emitted $\alpha$ energy $E_\alpha$. Upon finding the energy group in the linearly-spaced $\alpha$ energy grid that contains $E_\alpha$ (group $mm$, corresponding to lower energy bound $E_e\left(mm\right)$), the interpolated probability is calculated as:
 
 \begin{equation}
-\boxed{ \displaystyle p_{interp} = p\left(mm\right) + \left( \frac{ \left[ E_\alpha - E\left(mm\right) \right] \left[ p\left(mm\right) - p\left(mm\right) \right]}{\Delta E_\alpha^g } \right) }
+\boxed{ \displaystyle p_{interp} = p\left(mm\right) + \left( \frac{ \left[ E_\alpha - E\left(mm\right) \right] \left[ p\left(mm + 1\right) - p\left(mm \right) \right]}{E_e\left(mm+1 \right) - E_e\left(m\right) } \right) }
 \label{eq:p_interp}
 \end{equation}
 
@@ -302,7 +304,7 @@ For each individual $\alpha$-emitting source nuclide, one can now tally the grou
 First, let $rr\left(m\right)$ be the fraction of reactions on target nuclide $i$ from source nuclide $k$ producing $\alpha$s of energy $E^\alpha_\ell$, resulting in the formation of a product nucleus at energy $i_\ell$. The value of $rr$ for each energy group $m$ is calculated as:
 
 \begin{equation}
-rr\left(i\right) = \sum_{i=1}^{mm-1} \frac{ p\left(i+1\right) - p\left(i\right) }{p_{val}} 
+rr\left(m\right) = \sum_{i=1}^{mm-1} \frac{ p\left(m+1\right) - p\left(m\right) }{p_{interp}} 
 \end{equation}
 
 where $mm$ corresponds to the energy group containing the emitted $\alpha$ particle energy and $p\left(mm\right)$ is defined in Equation~\eqref{eq:an_prob_groupwise}. Meanwhile:
@@ -311,22 +313,29 @@ where $mm$ corresponds to the energy group containing the emitted $\alpha$ parti
 rr\left(mm\right)=\frac{p_{interp} - p\left( mm\right) }{p_{interp}}
 \end{equation}
 
-For each product nuclei excitation level $il$, the energy available to the neutron is:
+For each product nuclei excitation level $i_\ell$, the energy available to the neutron is:
 \begin{equation}
 Q_{level} = Q-E_{level}
 \end{equation}
 
 where $Q$ is the reaction Q-value and $E_{level}$ is the energy of product nuclei state $i_\ell$ (where $i_\ell=1$ corresponds to the ground state).
 
-Now, define the minimum $\alpha$ energy (in meV) which can result in neutrons emitted at 90\degree\ in the center-of-mass frame as:
+Now, define the minimum $\alpha$ energy (in MeV) which can result in neutrons emitted at 90\degree\ in the center-of-mass frame as:
 \begin{equation}
-E_{90\degree} = -\frac{Q_{level} \cdot A_{product}}{A_{product}-A_\alpha} 
+E_{90\degree} = -\frac{Q_{level} \cdot A_{prod}}{A_{prod}-A_\alpha} 
+\end{equation}
+
+where $A_{prod}$ is the mass of the compound recoil nucleus, i.e.:
+\begin{equation}
+A_{prod} =  A_t + 3
 \end{equation}
 
 This gives a threshold energy for \alphn\ reactions:
 \begin{equation}
-E_\alpha^{thresh} = - Q_{level} \cdot \frac{ A_n + A_p}{A_n + A_p - A_\alpha} 
+E_\alpha^{thresh} = - Q_{level} \cdot \frac{ A_n + A_{prod}}{A_n + A_{prod} - A_\alpha} 
 \end{equation}
+
+
 If $Q_{level} > 0$, then $E_\alpha^{thresh}=0$, i.e., the reaction occurs spontaneously.
 
 Next, looping through the $\alpha$ energy grid up to the energy bin corresponding to the emitted $\alpha$ ($mm$), we now need to determine the product energy state branching fractions (i.e., the distribution of energy states in the resulting product nucleus, thus determining the energy of the neutron).
@@ -348,7 +357,7 @@ If $E_\alpha^{mid}\left(m\right)<E_\alpha^{thresh}$, then no \alphn\ reaction ca
 Recall from section~\ref{sec:branching} that the branching fractions are calculated by the incident $\alpha$ energy. Thus, for an $\alpha$ particle with energy $E_\alpha$ in energy bin $i_p$ of the branching fraction data, the interpolated branching fraction between product energy states is:
 
 \begin{equation}
-\displaystyle b_x = f\left(i_\ell, i_p-1\right) + \frac{ \left[ E_\alpha - E_{br} \left( i_p-1 \right) \right] \left[ f\left( i_\ell, i_p\right) - f\left(i_\ell, i_p-1\right) \right] }{ E_{br}\left(i_p \right) - E_{br}\left(i_p-1\right) }
+\displaystyle b_x = f\left(i_\ell, i_p-1\right) + \frac{ \left[ E_\alpha^{mid}\left(mm\right) - E_{br} \left( i_p-1 \right) \right] \left[ f\left( i_\ell, i_p\right) - f\left(i_\ell, i_p-1\right) \right] }{ E_{br}\left(i_p \right) - E_{br}\left(i_p-1\right) }
 \end{equation}
 
 
@@ -357,9 +366,9 @@ Recall from section~\ref{sec:branching} that the branching fractions are calcula
 The neutron energy produced from an \alphn\ comes directly from the reaction kinematics. This is expressed as the following terms:
 
 \begin{eqnarray}
-T_1 & = & \sqrt{\frac{4 A_\alpha \cdot A_n \cdot E_\alpha}{2 \left(A_n + A_p \right) } } \\
-T_2 & = & \frac{A_\alpha \cdot A_n \cdot E_\alpha}{\left(A_n + A_p \right)^2 } \\
-T_3 & = & \frac{ A_{prod} \cdot E_\alpha + A_{prod}   \cdot Q_{level} - A_\alpha \cdot E_\alpha}{A_n + A_p}
+T_1 & = & \frac{\sqrt{4 A_\alpha \cdot A_n \cdot E^{mid}_{\alpha} \left(m_{\alpha} \right)}}{2 \left(A_n + A_{prod} \right) } \\
+T_2 & = & \frac{A_\alpha \cdot A_n \cdot E^{mid}_{\alpha}\left(m_{\alpha} \right)}{\left(A_n + A_{prod} \right)^2 } \\
+T_3 & = & \frac{ A_{prod} \cdot E^{mid}_{\alpha}\left( m_{\alpha} \right) + A_{prod}   \cdot Q_{level} - A_\alpha \cdot E^{mid}_{\alpha} \left( m_{\alpha} \right) }{A_n + A_{prod}}
 \end{eqnarray}
 
 If $T_2 + T_3 < 0$, then no neutron-producing reaction is possible for $E_\alpha$ and the remainder of the calculation is skipped.
