@@ -165,7 +165,7 @@ Here, a linearly-spaced grid is established for interpolating reaction cross-sec
 This means we have:
 
 \begin{equation}
-\Delta E_\alpha^g,i = \frac{E_\alpha^{\max} - E_\alpha^{\min} }{N^\alpha_{groups}}
+\Delta E_\alpha^{g,i} = \frac{E_\alpha^{\max} - E_\alpha^{\min} }{N^\alpha_{groups}}
 \end{equation}
 
 making up a linearly-spaced energy grid $E_e\left(m\right)$. Note that these same energy groups are likewise used to calculate $\sigma_{s}\left(E\right)$, the $\alpha$ stopping cross-section. 
@@ -174,7 +174,7 @@ Note that this alpha energy grid will be unique to each target nucleus (i.e., it
 
 \subsubsection{Interpolate $\sigan\left(E\right)$ for each $\alpha$ energy group}
 
-For energy $i_p$ in the pointwise $\sigan\left(E\right)$ cross-section data, determine the energy group $m$ in the $\alpha$ energy grid $E_e\left(m\right)$ such that $E_e\left(m\right)$ lies between cross-section energy group $i_p$ and $i_p+1$. (Or, if $E_e\left(m\right) < E\left(i_p\right)$ or $E_e\left(m\right) > E\left(ip\right)$, increment $i_p$, the cross-section energy group iterator). 
+For energy $i_p$ in the pointwise $\sigan\left(E\right)$ cross-section data, determine the energy group $m$ in the $\alpha$ energy grid $E_e\left(m\right)$ such that $E_e\left(m\right)$ lies between cross-section energy group $i_p$ and $i_p+1$. (Or, if $E_e\left(m\right) < E\left(i_p\right)$ or $E_e\left(m\right) > E\left(i_p\right)$, increment $i_p$, the cross-section energy group iterator). 
 
 The slope of the interpolated line is then just:
 
@@ -232,7 +232,7 @@ The stopping cross-section $\sigma_{s,nuc}^i \left(E\right)$ nuclear component f
 
 The electronic stopping power term is calculated using stopping power function coefficients $c_n^{stop}$, where $n=[1,5]$ are solid stopping cross-section terms, and $n=[6,10]$ are gas stopping terms.
 
-For the low-energy case ($E_e\left(m\right) < 30$ meV), we have the following:
+For the low-energy case ($E_e\left(m\right) < 30$ MeV), we have the following:
 \begin{eqnarray}
 S_{lo} & = & c_1^{stop} \cdot \left(1000 \cdot E_e\left(m\right) \right)^{c_2^{stop}} \\
 S_{hi} & = & \frac{c_3^{stop}}{E_e\left(m\right)} \cdot \ln \left( 1 + \frac{c_4^{stop}}{E_e\left(m\right)} + c_5^{stop}\cdot E_e\left(m\right) \right) 
@@ -243,7 +243,7 @@ Thus the electronic stopping component is:
 \begin{equation}
 \sigma_{s,ele}^i \left(E\right) =
 \begin{cases}
-\displaystyle \frac{S_{lo} \cdot S_{hi} }{\left(S_{lo} + S_{hi} \right)} & E_e\left(m\right) \leq 30\ \mathrm{meV} \\[12pt]
+\displaystyle \frac{S_{lo} \cdot S_{hi} }{\left(S_{lo} + S_{hi} \right)} & E_e\left(m\right) \leq 30\ \mathrm{MeV} \\[12pt]
 \displaystyle \exp\left\{ {c_6^{stop}} + \ln\left(\frac{1}{E_e\left(m\right)} \right) \left[ c_7^{stop} + \ln\left(\frac{1}{E_e\left(m\right)} \right) c_8^{stop} + \left[\ln\left(\frac{1}{E_e\left(m\right)}\right)\right]^2 c_9^{stop} \right] \right\} & \mathrm{otherwise}
 \end{cases}
 \end{equation}
@@ -274,10 +274,10 @@ for $m=\left(1,N_\alpha + 1\right)$.
 
 \subsubsection{Neutrons produced per source $\alpha$}
 
-For each alpha emitter, one then needs to interpolate the neutron production probability (Equation~\eqref{eq:an_prob_groupwise}) for the emitted $\alpha$ energy $E_\alpha$. Upon finding the energy group in the linearly-spaced $\alpha$ energy grid that contains $E_\alpha$ (group $mm$, corresponding to lower energy bound $E_e\left(mm\right)$), the interpolated probability is calculated as:
+For each alpha emitter, one then needs to interpolate the neutron production probability (Equation~\eqref{eq:an_prob_groupwise}) for the emitted $\alpha$ energy $E_\alpha$. Upon finding the energy group in the linearly-spaced $\alpha$ energy grid that contains $E_\alpha$ (group $m_\alpha$, corresponding to lower energy bound $E_e\left(m_\alpha\right)$), the interpolated probability is calculated as:
 
 \begin{equation}
-\boxed{ \displaystyle p_{interp} = p\left(mm\right) + \left( \frac{ \left[ E_\alpha - E\left(mm\right) \right] \left[ p\left(mm + 1\right) - p\left(mm \right) \right]}{E_e\left(mm+1 \right) - E_e\left(m\right) } \right) }
+\boxed{ \displaystyle p_{interp} = p\left(m_\alpha\right) + \left( \frac{ \left[ E_\alpha - E\left(m_\alpha\right) \right] \left[ p\left(m_\alpha + 1\right) - p\left(m_\alpha \right) \right]}{E_e\left(m_\alpha+1 \right) - E_e\left(m\right) } \right) }
 \label{eq:p_interp}
 \end{equation}
 
@@ -304,21 +304,21 @@ For each individual $\alpha$-emitting source nuclide, one can now tally the grou
 First, let $rr\left(m\right)$ be the fraction of reactions on target nuclide $i$ from source nuclide $k$ producing $\alpha$s of energy $E^\alpha_\ell$, resulting in the formation of a product nucleus at energy $i_\ell$. The value of $rr$ for each energy group $m$ is calculated as:
 
 \begin{equation}
-rr\left(m\right) = \sum_{i=1}^{mm-1} \frac{ p\left(m+1\right) - p\left(m\right) }{p_{interp}} 
+rr\left(m\right) = \sum_{i=1}^{m_\alpha-1} \frac{ p\left(m+1\right) - p\left(m\right) }{p_{interp}} 
 \end{equation}
 
-where $mm$ corresponds to the energy group containing the emitted $\alpha$ particle energy and $p\left(mm\right)$ is defined in Equation~\eqref{eq:an_prob_groupwise}. Meanwhile:
+where $m_\alpha$ corresponds to the energy group containing the emitted $\alpha$ particle energy and $p\left(m_\alpha\right)$ is defined in Equation~\eqref{eq:an_prob_groupwise}. Meanwhile, for the highest energy bin $m_\alpha$ (i.e., the energy bin corresponding to the energy of the emitted alpha):
 
 \begin{equation}
-rr\left(mm\right)=\frac{p_{interp} - p\left( mm\right) }{p_{interp}}
+rr\left(m_\alpha\right)=\frac{p_{interp} - p\left( m_\alpha\right) }{p_{interp}}
 \end{equation}
 
 For each product nuclei excitation level $i_\ell$, the energy available to the neutron is:
 \begin{equation}
-Q_{level} = Q-E_{level}
+Q_{level}^i = Q^i-E^i_{level}
 \end{equation}
 
-where $Q$ is the reaction Q-value and $E_{level}$ is the energy of product nuclei state $i_\ell$ (where $i_\ell=1$ corresponds to the ground state).
+where $Q$ is the reaction Q-value and $E_{level}$ is the energy of product nuclei state $i_\ell$ (where $i_\ell=1$ corresponds to the ground state) and $i$ denotes the target nucleus.
 
 Now, define the minimum $\alpha$ energy (in MeV) which can result in neutrons emitted at 90\degree\ in the center-of-mass frame as:
 \begin{equation}
@@ -338,26 +338,26 @@ E_\alpha^{thresh} = - Q_{level} \cdot \frac{ A_n + A_{prod}}{A_n + A_{prod} - A_
 
 If $Q_{level} > 0$, then $E_\alpha^{thresh}=0$, i.e., the reaction occurs spontaneously.
 
-Next, looping through the $\alpha$ energy grid up to the energy bin corresponding to the emitted $\alpha$ ($mm$), we now need to determine the product energy state branching fractions (i.e., the distribution of energy states in the resulting product nucleus, thus determining the energy of the neutron).
+Next, looping through the $\alpha$ energy grid up to the energy bin corresponding to the emitted $\alpha$ ($m_\alpha$), we now need to determine the product energy state branching fractions (i.e., the distribution of energy states in the resulting product nucleus, thus determining the energy of the neutron).
 
 The midpoint energy of each bin is used to evaluate the branching fraction, i.e.:
 
 \begin{equation}
-E_\alpha^{mid}\left(m\right) = \frac{E_e\left(m\right) + E_e\left(m+1\right)}{2}
+\overline{E_\alpha}\left(m\right) = \frac{E_e\left(m\right) + E_e\left(m+1\right)}{2}
 \end{equation}
 where for the last bin (containing $E_\alpha$), this becomes:
 \begin{equation}
-E_\alpha^{mid}\left(mm\right) = \frac{E_e\left(m\right) + E_e\left(m+1\right)}{2}
+\overline{E_\alpha}\left(m_\alpha\right) = \frac{E_\alpha + E_e\left(m_\alpha\right)}{2}
 \end{equation}
 
 i.e., here the goal is to calculate the relative branching fractions of the product nucleus energy states for all $\alpha$ energies between 0 and $E_\alpha$ which are above the threshold energy $E_\alpha^{thresh}$.
 
-If $E_\alpha^{mid}\left(m\right)<E_\alpha^{thresh}$, then no \alphn\ reaction can occur (thus there is no need to calculate branching fractions). If $E_\alpha^{mid}\left(m\right) > E_\alpha^{\max}$, then the branching fraction data for the highest $\alpha$ energy present in the database is used.
+If $\overline{E_\alpha}\left(m\right)<E_\alpha^{thresh}$, then no \alphn\ reaction can occur (thus there is no need to calculate branching fractions). If $\overline{E_\alpha}\left(m\right) > E_\alpha^{\max}$, then the branching fraction data for the highest $\alpha$ energy present in the database is used.
 
-Recall from section~\ref{sec:branching} that the branching fractions are calculated by the incident $\alpha$ energy. Thus, for an $\alpha$ particle with energy $E_\alpha$ in energy bin $i_p$ of the branching fraction data, the interpolated branching fraction between product energy states is:
+Recall from section~\ref{sec:branching} that the branching fractions are calculated by the incident $\alpha$ energy. Thus, for an $\alpha$ particle with energy $E_\alpha$ in energy bin $i_p$ of the branching fraction data, the interpolated branching fraction between product energy states $i_\ell$ is:
 
 \begin{equation}
-\displaystyle b_x = f\left(i_\ell, i_p-1\right) + \frac{ \left[ E_\alpha^{mid}\left(mm\right) - E_{br} \left( i_p-1 \right) \right] \left[ f\left( i_\ell, i_p\right) - f\left(i_\ell, i_p-1\right) \right] }{ E_{br}\left(i_p \right) - E_{br}\left(i_p-1\right) }
+\displaystyle b_x \left( m \right) = f\left(i_\ell, i_p-1\right) + \frac{ \left[ \overline{E_\alpha} \left(m\right) - E_{br} \left( i_p-1 \right) \right] \left[ f\left( i_\ell, i_p\right) - f\left(i_\ell, i_p-1\right) \right] }{ E_{br}\left(i_p \right) - E_{br}\left(i_p-1\right) }
 \end{equation}
 
 
@@ -366,12 +366,12 @@ Recall from section~\ref{sec:branching} that the branching fractions are calcula
 The neutron energy produced from an \alphn\ comes directly from the reaction kinematics. This is expressed as the following terms:
 
 \begin{eqnarray}
-T_1 & = & \frac{\sqrt{4 A_\alpha \cdot A_n \cdot E^{mid}_{\alpha} \left(m_{\alpha} \right)}}{2 \left(A_n + A_{prod} \right) } \\
-T_2 & = & \frac{A_\alpha \cdot A_n \cdot E^{mid}_{\alpha}\left(m_{\alpha} \right)}{\left(A_n + A_{prod} \right)^2 } \\
-T_3 & = & \frac{ A_{prod} \cdot E^{mid}_{\alpha}\left( m_{\alpha} \right) + A_{prod}   \cdot Q_{level} - A_\alpha \cdot E^{mid}_{\alpha} \left( m_{\alpha} \right) }{A_n + A_{prod}}
+T_1 & = & \frac{\sqrt{4 A_\alpha \cdot A_n \cdot \overline{E_{\alpha}} \left(m \right)}}{2 \left(A_n + A_{prod} \right) } \\
+T_2 & = & \frac{A_\alpha \cdot A_n \cdot \overline{E}_{\alpha}\left(m \right)}{\left(A_n + A_{prod} \right)^2 } \\
+T_3 & = & \frac{ A_{prod} \cdot \overline{E_{\alpha}} \left( m \right) - A_\alpha \cdot \overline{E_{\alpha}}\left(m \right)    + A_{prod}   \cdot Q_{level}^i }{A_n + A_{prod}}
 \end{eqnarray}
 
-If $T_2 + T_3 < 0$, then no neutron-producing reaction is possible for $E_\alpha$ and the remainder of the calculation is skipped.
+If $T_2 + T_3 < 0$, then no neutron-producing reaction is possible for $E_\alpha$ and the remainder of the calculation is skipped. Note that we are repeating this calculation of the minimum and maximum neutron energies across the alpha energy grid, i.e., for all grid energies between $\left[1,m_\alpha \right]$; i.e., this calculation spans the range of slowing-down energies of the alpha.
 
 From this, we can determine the maximum and minimum neutron energies as:
 \begin{eqnarray}
@@ -383,9 +383,9 @@ E_n^{\min} & = &
 \end{cases}
 \end{eqnarray}
 
-Meanwhile, the average neutron energy $\bar{E}$ is:
+Meanwhile, the average neutron energy $\overline{E}$ is:
 \begin{equation}
-\bar{E} = \frac{E_n^{\max} + E_n^{\min}}{2}
+\overline{E} = \frac{E_n^{\max} + E_n^{\min}}{2}
 \end{equation}
 
 %Thus, the \alphn\ neutron production rate for $\alpha$ energy group $m$ into neutron energy group $g$ is:
@@ -397,7 +397,7 @@ Meanwhile, the average neutron energy $\bar{E}$ is:
 
 Looping over each user-defined neutron energy group $n$, the groupwise contribution per each source can now be quantified as follows.
 
-First, the bounds of the neutron energies produced are checked. If the higher neutron energy group bound is below the minimum neutron energy ($\mathrm{bounds}\left(n\right) < E_n^{\min}$) or the lower neutron energy group bound is greater than the maximum neutron energy ($\mathrm{bounds}\left(n+1\right) > E_n^{\max}$), there are no possible \alphn contributions to energy group $n$ (and this this group is skipped).
+First, the bounds of the neutron energies produced are checked. If the higher neutron energy group bound is below the minimum neutron energy ($\mathrm{bounds}\left(n\right) < E_n^{\min}$) or the lower neutron energy group bound is greater than the maximum neutron energy ($\mathrm{bounds}\left(n+1\right) > E_n^{\max}$), there are no possible \alphn\ contributions to energy group $n$ (and this this group is skipped).
 
 Next, the width of the possible neutron energy range $\Delta E_n$ is determined with respect to the bin energy structure. This process is as follows:
 
@@ -410,15 +410,15 @@ Next, the width of the possible neutron energy range $\Delta E_n$ is determined 
 The contribution of alphas at energy $E_\ell$ from isotope $k$ producing a target nuclei of level $i_\ell$ to neutron energy group $n$ is thus:
 
 \begin{equation}
-S_n^{k,\ell} =  \sum_{i_\ell=1}^{N_{levels}} \sum_{m=1}^{M_\alpha}  \frac{rr\left(m\right)\cdot b_x \cdot \Delta E_n }{E_n^{\max} - E_n^{\min}}
+S_n^{k,\ell} =  \sum_{i_\ell=1}^{N_{levels}} \sum_{m=1}^{M_\alpha}  \frac{rr\left(m\right)\cdot b_x \left(m\right) \cdot \Delta E_n }{E_n^{\max} - E_n^{\min}}
 \end{equation}
 
-where $M_\alpha$ corresponds to the energy bin index $m$ containing $E_\alpha$, $N_{levels}$ is the number of product nuclide excitation levels, $b_x$ is the product level branching fraction (which is a function of the incident $\alpha$\ energy), and $p_{interp}$ is the energy-interpolated neutron production probability, described in Equation~\eqref{eq:p_interp}.
+where $M_\alpha$ corresponds to the energy bin index $m$ containing $E_\alpha$, $N_{levels}$ is the number of product nuclide excitation levels, $b_x\left(m\right)$ is the product level branching fraction (which is a function of the incident $\alpha$\ energy), and $p_{interp}$ is the energy-interpolated neutron production probability, described in Equation~\eqref{eq:p_interp}.
 
 Thus, the \textbf{total} \alphn\ source term for each neutron energy group $n$ is:
 
 \begin{equation}
-\displaystyle \boxed{ \phi_n = \sum_{i=1}^{Targets} \sum_{k=1}^{Sources} N_k \cdot \lambda_k \cdot f_\alpha \left( E^\alpha_\ell  \right) \sum_{\ell}^{N_{\alpha}}  p_{interp} \sum_{i_\ell=1}^{N_{levels}} \sum_{m=1}^{M_\alpha}  \frac{rr\left(m\right)\cdot b_x \cdot \Delta E_n }{E_n^{\max} - E_n^{\min}}}
+\displaystyle \boxed{ \phi_n = \sum_{i=1}^{Targets} \sum_{k=1}^{Sources} N_k \cdot \lambda_k \cdot f_\alpha \left( E^\alpha_\ell  \right) \sum_{\ell}^{N_{\alpha}}  p_{interp} \sum_{i_\ell=1}^{N_{levels}} \sum_{m=1}^{M_\alpha}  \frac{rr\left(m\right)\cdot b_x \left( m \right) \cdot \Delta E_n }{E_n^{\max} - E_n^{\min}}}
 \end{equation}
 
 \end{document}
